@@ -1,6 +1,6 @@
 ---
 description: Download a video from a URL, grab frames, transcribe the audio, and turn it into a Claude skill
-argument-hint: <video-url> [skill-name] [--interval N] [--model tiny|base|small|medium]
+argument-hint: <video-url-or-file> [skill-name] [--interval N] [--model tiny|base|small|medium]
 allowed-tools: Bash(.claude/scripts/video-to-skill.sh:*), Bash(mkdir:*), Bash(cp:*), Bash(ls:*), Read, Write, Glob
 ---
 
@@ -9,7 +9,7 @@ allowed-tools: Bash(.claude/scripts/video-to-skill.sh:*), Bash(mkdir:*), Bash(cp
 Arguments: `$ARGUMENTS`
 
 Parse the arguments:
-- First token: the video URL (required). If missing, stop and ask for it.
+- First token: the video URL or a local video file path (required). If missing, stop and ask for it.
 - Optional second token (not starting with `--`): the skill name. Otherwise derive a short kebab-case name from the video title after downloading.
 - `--interval N`: seconds between sampled frames (default `10`). Use a smaller value (3–5) for short or fast-paced tutorials.
 - `--model M`: faster-whisper model (default `base`; `small` is more accurate but slower).
@@ -26,7 +26,7 @@ WORK="${TMPDIR:-/tmp}/video-to-skill/$(date +%s)"
 It prints progress to stderr and the output directory on stdout. The directory contains:
 `meta.json`, `transcript.txt` (timestamped), `frames/frame_NNNN.jpg`, and `frames/index.txt` (frame → seconds).
 
-If the download fails (private video, geo-block, login required), report the yt-dlp error and stop.
+If the download fails (private video, geo-block, login required, host blocked by the network), report the yt-dlp error and stop. If the transcript says `(transcription failed)` (usually the Whisper model could not be downloaded from huggingface.co), continue from the frames alone and tell the user.
 
 ## 2. Understand
 
